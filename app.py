@@ -110,7 +110,8 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
     with open(f"{paciente}.pdf","rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
         
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf"></iframe>'
+    #pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf"></iframe>'
+    pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf"></embed>'
 
     st.markdown(pdf_display, unsafe_allow_html=True)
 
@@ -406,7 +407,7 @@ def gerarPdfReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidad
     with open('receituario_template.pdf',"rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
         
-    pdf_display_receituario = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="1200" height="800" type="application/pdf"></iframe>'
+    pdf_display_receituario = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="1200" height="800" type="application/pdf"></embed>'
 
     st.markdown(pdf_display_receituario, unsafe_allow_html=True)
 
