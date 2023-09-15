@@ -1,13 +1,15 @@
 import streamlit as st
 from PyPDF2 import PdfReader, PdfWriter
 import base64
-from docxtpl import DocxTemplate
-from docx2pdf import convert
-import win32com
-import pythoncom
+#importações relativas ao pdf para criação do receituário
+from reportlab.lib.units import cm
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import  landscape, A4
+from PIL import Image
 
-#sabe-se lá porque motivo, sem essa linha de código e sem importar pythoncom e win32, o conversor de word para pdf dá erro
-xl=win32com.client.Dispatch("Word.Application",pythoncom.CoInitialize())
+
+
+
 
 
 #Variáveis globais que serão usadas em todas as funções
@@ -15,7 +17,16 @@ lista_medicamentos = ["","Alfaepoetina 4.000 UI injetável", "Sacarato de hidró
 lista_medicos = ["Caio Petrola", "Maria Emilia Diniz", "Mucio Homero L. R. Ribeiro","Gloriete Vieira de Oliveira"]
 lista_cids = ["N18.0 - Doença renal crônica", "M32.1 - Nefrite lúpica", "N04.1 - GESF", "N04.0 - Doença de lesões mínimas", "N04.3 - Nefropatia Membranosa"]
 lista_clinicas = ["Clínica do Rim - Petrolina", "HU - Univasf"]
+# Essas variáveis abaixo ficarão globais para serem usadas em várias funções
+my_path = "receituario_template.pdf"
 
+c = canvas.Canvas(my_path, pagesize=landscape(A4), bottomup=0)
+
+#Determinando valores de referencia em cm
+altura_cabecalho = 3
+centro_direita = 7.5
+centro_esquerda = 22.5
+metade_pagina = 14
 
 def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6, clinica, cid_geral, medico):
 
@@ -103,22 +114,6 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
 
     st.markdown(pdf_display, unsafe_allow_html=True)
 
-
-def transformarWordPdf(paciente):
-    entrada = f"PDF/{paciente}.docx"
-    saida = f"PDF/{paciente}-receituario.pdf"
-
-    convert(entrada, saida)
-
-    # Fazendo o embeded PDF para visualizar o pdf no próprio site
-    with open(f"PDF/{paciente}-receituario.pdf","rb") as f:
-        base64_pdf_receita = base64.b64encode(f.read()).decode('utf-8')
-        
-    pdf_display_receita = f'<iframe src="data:application/pdf;base64,{base64_pdf_receita}" width="1100" height="850" type="application/pdf"></iframe>'
-
-    st.markdown(pdf_display_receita, unsafe_allow_html=True)
-
-
 def fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6 ):
     lista_remedios = [remedio1, remedio2, remedio3, remedio4, remedio5, remedio6]
     lista_quantidades = [quantidade1, quantidade2, quantidade3, quantidade4, quantidade5, quantidade6]
@@ -126,64 +121,70 @@ def fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2,
     aglomerado_final = [x for x in aglomerado_inicial if x[0]!="" ]
     dicio_remedios = dict(aglomerado_final)
     #st.write(dicio_remedios["Alfaepoetina 4.000 UI injetável"])
+    print(dicio_remedios)
+    print (len(dicio_remedios))
     
-    
-    display_hemax=False
+    #Inicializando as variáveis zeradas
     hemax_total= "   "
     hemax_xsema= "   "
     
-    display_norip=False
     norip_total= "   "
     norip_x15dias= "   "
 
-    display_calcijex=False
     calcijex_total= "   "
     calcijex_dose= "   "
-
-    display_paricalcitol=False
+    
     paricalcitol_total= "   "
     paricalcitol_dose= "   "
-
-    display_caco3=False
+    
     caco3_total= "____ "
     caco3_3xdia= "____ "
 
-    display_sevelamer=False
     sevelamer_total= "   "
     sevelamer_3xdia= "   "
-
-    display_calcitriol=False
+    
     calcitriol_total= "   "
     calcitriol_dose= "   "
-
-    display_cinacalcete=False
+    
     cinacalcete_total= "   "
     cinacalcete_dia= "   "
 
-    display_mmf=False
     mmf_total= "   "
     mmf_dose= "   "
   
-    display_aza=False
     aza_total= "   "
     aza_dose= "   "
   
-    display_hcq=False
     hcq_total= "   "
     hcq_dose= "   "
-  
-    display_csa100=False
+    
     csa100_total= "   "
     csa100_dose= "   "
-  
-    display_csa50=False
+    
     csa50_total= "   "
     csa50_dose= "   "
   
-    display_csa25=False
     csa25_total= "   "
     csa25_dose= "   "
-
+    
+    #Definindo parâmetros médicos para fazer o carimbo nas receitas
+    if medico ==lista_medicos[0]:
+        nome_medico = "Dr Caio Petrola"
+        especialidade = "Nefrologista"
+        crm = "CRM 15241-PE  21149-BA"
+    elif medico ==lista_medicos[1]:
+        nome_medico = "Dra Emília Diniz"
+        especialidade = "Nefrologista"
+        crm = "CRM 4715-PE"
+    elif medico ==lista_medicos[2]:
+        nome_medico = "Dr Mucio Homero"
+        especialidade = "Nefrologista"
+        crm = "CRM 12370-PE"
+    elif medico ==lista_medicos[3]:
+        nome_medico = "Dra Gloriete Vieira"
+        especialidade = "Nefrologista"
+        crm = "CRM 9766-PE"
+     
 
      #Criando a lógica de preenchimento a partir do dicionario
     if lista_medicamentos[1] in dicio_remedios:
@@ -253,28 +254,164 @@ def fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2,
         csa25_dose = int(dicio_remedios[lista_medicamentos[13]]/60)
         display_csa25=True
 
+    #Iniciando a parte em que preenche o pdf com as medicações
+    #Definindo a altura para iniciar a escrever(x), a distância para a próxima linha(y) e a distância para o próximo item (z), todas em cm.
+    x = 7.2
+    y = 0.4
+    z = 1.2
 
-    #preenchendo os campos correspondentes no modelo DOCX
-    doc = DocxTemplate("modelo_receita_lme.docx")
-    context = { 'nome' : paciente, 'hemax_total':hemax_total, 'hemax_xsema': hemax_xsema, 'norip_total':norip_total, 
-                'norip_x15dias': norip_x15dias, 'calcijex_total':calcijex_total, 'calcijex_dose':calcijex_dose, 
-                'paricalcitol_total':paricalcitol_total, 'paricalcitol_dose':paricalcitol_dose, 'sevelamer_total':sevelamer_total, 
-                'sevelamer_3xdia':sevelamer_3xdia, 'calcitriol_total':calcitriol_total, 'calcitriol_dose':calcitriol_dose, 
-                'cinacalcete_total':cinacalcete_total, 'cinacalcete_dia':cinacalcete_dia, 'display_hemax':display_hemax, 
-                'display_norip':display_norip, 'display_calcijex':display_calcijex, 'display_paricalcitol':display_paricalcitol, 
-                'display_sevelamer':display_sevelamer, 'display_calcitriol':display_calcitriol, 'display_cinacalcete':display_cinacalcete,
-                'display_mmf':display_mmf, 'mmf_total':mmf_total, 'mmf_dose':mmf_dose,
-                'display_aza':display_aza, 'aza_total':aza_total, 'aza_dose':aza_dose,
-                'display_hcq':display_hcq, 'hcq_total':hcq_total, 'hcq_dose':hcq_dose,
-                'display_csa100':display_csa100, 'csa100_total':csa100_total, 'csa100_dose':csa100_dose,
-                'display_csa50':display_csa50, 'csa50_total':csa50_total, 'csa50_dose':csa50_dose,
-                'display_csa25':display_csa25, 'csa25_total':csa25_total, 'csa25_dose':csa25_dose,
-
-            }
-    doc.render(context)
-    doc.save(f"PDF/{paciente}.docx")
+    # Iniciando a verificação de quais itens estão contidos no dicio_remedios, e produzindo o texto para cada um deles.
+    for item in dicio_remedios:
+        x = x + z
+        linha1 = "" # zerando o texto da receita
+        linha2 = "" # zerando o texto da receita
+        if item == lista_medicamentos[1]:
+            linha1 = f'Alfaepoetina     4.000 UI ______________________________{hemax_total} ampolas'
+            linha2 = f'Fazer 01 FA SC {hemax_xsema} x por semana após hemodiálise.'
+        elif item == lista_medicamentos[2]:
+            linha1 =f'Sacarato de hidróxido de ferro 100 mg___________________ {norip_total} ampolas'
+            linha2 =f'Fazer {norip_x15dias} ampola(s) a cada 15 dias.'
+    
+        elif item == lista_medicamentos[3]:
+            linha1 = f'Calcitriol 0,25 mcg _____________________________________{calcitriol_total} caps.'
+            linha2 = f'Tomar {calcitriol_dose} cápsula(s) após hemodiálise.'
+    
+        elif item == lista_medicamentos[4]:
+            linha1 = f'fCalcijex 1 mcg   ____________________________________{calcijex_total}  ampolas'
+            linha2 = f'Aplicar {calcijex_dose}  amp IV após hemodiálise.'
+    
+        elif item == lista_medicamentos[5]:
+            linha1 = f'Sevelamer__________________________________________{sevelamer_total} comps.'
+            linha2 = f'Tomar {sevelamer_3xdia}  comprimido(s) 3 vezes ao dia (junto com as refeições).'
+    
+        elif item == lista_medicamentos[6]:
+            linha1 = f'Cloridrato de cinacalcete 30mg¬¬¬________________________{cinacalcete_total} comps.' 
+            linha2 = f'Tomar {cinacalcete_dia} comprimido(s) 1x ao dia.'
+    
+        elif item == lista_medicamentos[7]:
+            linha1 = f'Paricalcitol 5mcg/ml__________________________________{paricalcitol_total} ampolas'
+            linha2 = f'Fazer   {paricalcitol_dose}   amp IV após hemodiálise.'
+    
+        elif item == lista_medicamentos[8]:
+            linha1 = f'Micofenolato de mofetila  500mg ____________________{mmf_total} comprs'
+            linha2 =f'Tomar {mmf_dose} comprimido(s) 12/12h.'
+    
+        elif item == lista_medicamentos[9]:
+            linha1 = f'Azatioprina 50mg ________________________________{aza_total} comprs'
+            linha2 = f'Tomar {aza_dose} comprimido(s) 1 x ao dia.'
+    
+        elif item == lista_medicamentos[10]:
+            linha1 = f'Hidroxicloroquina 400mg __________________________{hcq_total} comprs'
+            linha2 = f'Tomar {hcq_dose} comprimido 1 vez ao dia.'
+    
+        elif item == lista_medicamentos[11]:
+            linha1 = f'Ciclosporina 100mg _____________________________{csa100_total} comprs'
+            linha2 = f'Tomar {csa100_dose} comprimido(s) 12/12h.'
+    
+        elif item == lista_medicamentos[12]:
+            linha1 = f'Ciclosporina 50mg ______________________________{csa50_total} comprs'
+            linha2 = f'Tomar {csa50_dose} comprimido(s) 12/12h.'
+    
+        elif item == lista_medicamentos[13]:
+            linha1 = f'Ciclosporina 25mg ______________________________{csa25_total} comprs'
+            linha2 = f'Tomar {csa25_dose} comprimido(s) 12/12h.'
+    
        
-    transformarWordPdf(paciente)
+        #iniciar nesse nível o acréscimo do "texto" ao pdf
+        c.drawString(1*cm, x*cm, linha1)
+        c.drawString(1*cm, (x+y)*cm, linha2)
+        c.drawString(16*cm, x*cm, linha1)
+        c.drawString(16*cm, (x+y)*cm, linha2)
+    c.setFontSize(10)
+    c.drawString((centro_direita -3)*cm, (altura_cabecalho+3.2)*cm, paciente)
+    c.drawString((centro_esquerda -3)*cm, (altura_cabecalho+3.2)*cm, paciente)
+    
+    # Fazendo o carimbo no final da página. O motivo do loop é fazer nas duas páginas
+    j=0
+    for i in range(2):
+        c.saveState()
+        c.translate((12+j)*cm, 17.5*cm)
+        c.rotate(-45)
+        c.setFont("Times-Roman",9)
+        c.drawCentredString(0,0,nome_medico)
+        c.drawCentredString(0,10,especialidade)
+        c.setFont("Times-Roman",7)
+        c.drawCentredString(0,20,crm)
+        c.restoreState()
+        j=j+metade_pagina
+
+def gerarPdfReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6):
+    #my_path = "receituario_template.pdf"
+
+    #c = canvas.Canvas(my_path, pagesize=landscape(A4), bottomup=0)
+    #c.translate(cm, cm)
+    c.setTitle("Receituário")
+    c.line(15*cm, 0, 15*cm, 21*cm)
+    c.setFont("Helvetica", 9)
+    #Inserindo imagem do cabeçalho
+    #Primeiro, precisa virar a imagem, por causa da configuração bottomup =0
+    #A imagem precisa ficar antes das linhas,para evitar que o "branco" da imagem fique por cima das linhas
+    def flip_image(image_path):
+        img = Image.open(image_path)
+        out = img.transpose(Image.FLIP_TOP_BOTTOM)
+        
+        output_path = "flipped_" + image_path  # Specify the output file path here
+        out.save(output_path)  # Save the image using the output file path
+        
+        return output_path  # Return the output file path
+
+
+    image = flip_image('cabecalho.jpg')
+    c.drawImage(image,1,8)
+    c.drawImage(image,15*cm,8)
+    #c.drawImage('cabecalho.jpg',6, 8)
+
+
+    #Cabeçalho do receituário da direita
+    c.drawCentredString(centro_direita*cm, (altura_cabecalho+0)*cm, "AMBULATÓRIO")
+    c.drawCentredString(centro_direita*cm, (altura_cabecalho+0.4)*cm, "HOSPITAL UNIVERSITARIO")
+    c.drawCentredString(centro_direita*cm, (altura_cabecalho+0.8)*cm, "Av. José de Sá Maniçoba, S/n - Centro - 56304-205 Petrolina - PE")
+    c.drawCentredString(centro_direita*cm, (altura_cabecalho+1.2)*cm, "(87)2101-6511/2101-6500")
+    c.drawCentredString(centro_direita*cm, (altura_cabecalho+2.2)*cm, "RECEITUÁRIO")
+    c.drawString((centro_direita-4.5)*cm, (altura_cabecalho+3.2)*cm, "Paciente:")
+    c.line((centro_direita-5)*cm, 2.5*cm, (centro_direita+5)*cm, 2.5*cm) #linha de cima
+    c.line((centro_direita-5)*cm, 6.7*cm, (centro_direita+5)*cm, 6.7*cm) #linha de baixo
+    c.line((centro_direita-5)*cm, 2.5*cm, (centro_direita-5)*cm, 6.7*cm) #linha da direita
+    c.line((centro_direita+5)*cm, 2.5*cm, (centro_direita+5)*cm, 6.7*cm) #linha da esquerda
+
+    #Cabeçalho do receituário da esquerda
+    c.drawCentredString(centro_esquerda*cm, (altura_cabecalho+0)*cm, "AMBULATÓRIO")
+    c.drawCentredString(centro_esquerda*cm, (altura_cabecalho+0.4)*cm, "HOSPITAL UNIVERSITARIO")
+    c.drawCentredString(centro_esquerda*cm, (altura_cabecalho+0.8)*cm, "Av. José de Sá Maniçoba, S/n - Centro - 56304-205 Petrolina - PE")
+    c.drawCentredString(centro_esquerda*cm, (altura_cabecalho+1.2)*cm, "(87)2101-6511/2101-6500")
+    c.drawCentredString(centro_esquerda*cm, (altura_cabecalho+2.2)*cm, "RECEITUÁRIO")
+    c.drawString((centro_esquerda-4.5)*cm, (altura_cabecalho+3.2)*cm, "Paciente:")
+    c.line((centro_esquerda-5)*cm, 2.5*cm, (centro_esquerda+5)*cm, 2.5*cm) #linha de cima
+    c.line((centro_esquerda-5)*cm, 6.7*cm, (centro_esquerda+5)*cm, 6.7*cm) #linha de baixo
+    c.line((centro_esquerda-5)*cm, 2.5*cm, (centro_esquerda-5)*cm, 6.7*cm) #linha da direita
+    c.line((centro_esquerda+5)*cm, 2.5*cm, (centro_esquerda+5)*cm, 6.7*cm) #linha da esquerda
+
+    
+
+
+
+
+    fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6 )
+
+
+    c.showPage()
+    c.save()
+
+    # Fazendo o embeded PDF para visualizar o pdf no próprio site
+    with open('receituario_template.pdf',"rb") as f:
+        base64_pdf = base64.b64encode(f.read()).decode('utf-8')
+        
+    pdf_display_receituario = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="1200" height="800" type="application/pdf"></iframe>'
+
+    st.markdown(pdf_display_receituario, unsafe_allow_html=True)
+
+
+   
     
 
 
@@ -326,8 +463,9 @@ def main():
     if submit_button:
         # st.write(f"Clínica: {clinica}")
         fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6, clinica, cid_geral, medico)
-        fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6)
-   
+        gerarPdfReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6)
+        #fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6)
+        
 
 
 if __name__ == "__main__":
