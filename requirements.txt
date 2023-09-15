@@ -2,4 +2,4 @@ docx2pdf==0.1.8
 docxtpl==0.16.7
 PyPDF2==3.0.1
 streamlit
-pywin32
+reportlab
