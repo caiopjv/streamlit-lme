@@ -103,11 +103,11 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
 
    
     # write "output" to PyPDF2-output.pdf
-    with open(f"PDF/{paciente}.pdf", "wb") as output_stream:
+    with open(f"{paciente}.pdf", "wb") as output_stream:
         writer.write(output_stream)
 
     # Fazendo o embeded PDF para visualizar o pdf no próprio site
-    with open(f"PDF/{paciente}.pdf","rb") as f:
+    with open(f"{paciente}.pdf","rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
         
     pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf"></iframe>'
