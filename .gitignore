@@ -1,0 +1,6 @@
+# Ignorar a pasta do ambiente virtual
+stlme/
+
+# Ignorar arquivos compilados do Python
+__pycache__/
+*.pyc
