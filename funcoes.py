@@ -1,4 +1,4 @@
-from PyPDF2 import PdfReader, PdfWriter
+from PyPDF2 import PdfReader, PdfWriter, generic
 import base64
 import streamlit as st
 from var_globais import *
@@ -8,6 +8,24 @@ from reportlab.lib.pagesizes import  landscape, A4
 from PIL import Image
 
 c = canvas.Canvas(my_path, pagesize=landscape(A4), bottomup=0)
+
+
+def set_need_appearances_writer(writer):
+    try:
+        catalog = writer._root_object
+        # AcroForm é onde ficam as informações do formulário
+        if '/AcroForm' not in catalog:
+            catalog.update({
+                generic.NameObject('/AcroForm'): generic.DictionaryObject()
+            })
+        if '/NeedAppearances' not in catalog['/AcroForm']:
+            catalog['/AcroForm'].update({
+                generic.NameObject('/NeedAppearances'): generic.BooleanObject(True)
+            })
+        return writer
+    except Exception as e:
+        print('Erro ao definir NeedAppearances:', repr(e))
+        return writer
 
 
 def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6, clinica, cid_geral, medico):
@@ -53,6 +71,9 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
     #iniciando a parte de preencher LMEs
     reader = PdfReader("lme_2022.pdf")
     writer = PdfWriter()
+
+    # Comando para tentar não dar erro ao imprimir no Firefox
+    set_need_appearances_writer(writer)
 
     page = reader.pages[0]
     fields = reader.get_fields()
