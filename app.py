@@ -33,33 +33,41 @@ def main():
         medico = form_a.selectbox("Médico", lista_medicos)
 
         #Definindo a Clínica
-        clinica = form_a.radio("Clínica", lista_clinicas)
+        clinica = form_a.radio("Clínica", lista_clinicas, index=1) # index =1 define o segundo item, no caso HU, como padrão
     
         container_medicamento = form_b.container()
-        med_a, med_b = container_medicamento.columns([0.7, 0.3])
         
-        remedio1 = med_a.selectbox("Medicação 1", lista_medicamentos)
-        quantidade1 = med_b.number_input("Quantidade 1", step=1)
-        remedio2 = med_a.selectbox("Medicação 2", lista_medicamentos)
-        quantidade2 = med_b.number_input("Quantidade 2", step=1)
-        remedio3 = med_a.selectbox("Medicação 3", lista_medicamentos)
-        quantidade3 = med_b.number_input("Quantidade 3", step=1)
-        remedio4 = med_a.selectbox("Medicação 4", lista_medicamentos)
-        quantidade4 = med_b.number_input("Quantidade 4", step=1)
-        remedio5 = med_a.selectbox("Medicação 5", lista_medicamentos)
-        quantidade5 = med_b.number_input("Quantidade 5", step=1)
-        remedio6 = med_a.selectbox("Medicação 6", lista_medicamentos)
-        quantidade6 = med_b.number_input("Quantidade 6", step=1)
+        # Listas para armazenar os valores
+        remedios = []
+        quantidades = []
 
+        # Loop para criar campos de Medicação e Quantidade
+        for i in range(1, 7):
+            med_col, quant_col = container_medicamento.columns([0.7, 0.3])
+            remedio = med_col.selectbox(f"Medicação {i}", lista_medicamentos, key=f"remedio{i}")
+            quantidade = quant_col.number_input(f"Quantidade {i}", step=1, key=f"quantidade{i}")
+            remedios.append(remedio)
+            quantidades.append(quantidade)
 
         submit_button = st.form_submit_button("Fazer LME")
-    if submit_button:
-        # st.write(f"Clínica: {clinica}")
-        fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6, clinica, cid_geral, medico)
-        gerarPdfReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6)
-        #fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6)
-        
 
+    if submit_button:
+        fazerLme(paciente, mae, peso, altura,
+                 remedios[0], quantidades[0],
+                 remedios[1], quantidades[1],
+                 remedios[2], quantidades[2],
+                 remedios[3], quantidades[3],
+                 remedios[4], quantidades[4],
+                 remedios[5], quantidades[5],
+                 clinica, cid_geral, medico)
+
+        gerarPdfReceita(paciente, medico,
+                        remedios[0], quantidades[0],
+                        remedios[1], quantidades[1],
+                        remedios[2], quantidades[2],
+                        remedios[3], quantidades[3],
+                        remedios[4], quantidades[4],
+                        remedios[5], quantidades[5])
 
 if __name__ == "__main__":
     main()
