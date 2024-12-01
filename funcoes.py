@@ -6,6 +6,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import  landscape, A4
 from PIL import Image
+import io
 
 c = canvas.Canvas(my_path, pagesize=landscape(A4), bottomup=0)
 
@@ -27,6 +28,58 @@ def set_need_appearances_writer(writer):
         print('Erro ao definir NeedAppearances:', repr(e))
         return writer
 
+def parametros_carimbo(medico):
+    #Definindo parâmetros médicos para fazer o carimbo nas receitas
+    if medico ==lista_medicos[0]:
+        nome_medico = "Dr Caio Petrola"
+        especialidade = "Nefrologista"
+        crm = "CRM 15241-PE  21149-BA"
+    elif medico ==lista_medicos[1]:
+        nome_medico = "Dra Emília Diniz"
+        especialidade = "Nefrologista"
+        crm = "CRM 4715-PE"
+    elif medico ==lista_medicos[2]:
+        nome_medico = "Dr Mucio Homero"
+        especialidade = "Nefrologista"
+        crm = "CRM 12370-PE"
+    elif medico ==lista_medicos[3]:
+        nome_medico = "Dra Gloriete Vieira"
+        especialidade = "Nefrologista"
+        crm = "CRM 9766-PE"
+    elif medico ==lista_medicos[4]:
+        nome_medico = "Dra Rita Duarte"
+        especialidade = "Reumatologista"
+        crm = "CRM 16629-PE 33562-BA"
+    return nome_medico, especialidade, crm
+
+def carimbar(nome_medico, especialidade, crm):
+    packet = io.BytesIO()   #  cria um "arquivo em memória" que é utilizado como um buffer para armazenar dados temporários
+    can = canvas.Canvas(packet, pagesize=A4)
+
+    # Defina o texto do carimbo e sua posição no template
+    # Salvar o estado atual do canvas
+    can.saveState()
+
+    # Mover a origem para a posição desejada do carimbo
+    can.translate(460, 215)
+
+    # Rotacionar o sistema de coordenadas
+    can.rotate(10)
+
+    # Desenhar o texto do carimbo rotacionado
+    can.setFont("Times-Roman", 9)
+    can.drawCentredString(0, 0, f"{nome_medico}")
+    can.drawCentredString(0, -10, f"{especialidade}")
+    can.drawCentredString(0, -20, f"{crm}")
+
+    # Restaurar o estado original do canvas
+    can.restoreState()
+
+    # Salvar o carimbo em memória
+    can.save()
+    packet.seek(0) # move o cursor do buffer de memória para o início. Sem isso, ao tentar ler o conteúdo, você estaria começando a partir do final e não conseguiria acessar os dados que foram escritos.
+    # Retornar o buffer em memória que contém o carimbo
+    return packet
 
 def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6, clinica, cid_geral, medico):
 
@@ -56,9 +109,23 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
 
     match medico:
         case "Caio Petrola":
-            cns = "707.003.835.344.732"
+            cns = "707.0038.3534.4732"
+            index_lista_medicos=0
+        case "Maria Emilia Diniz":
+            cns = "709.8090.1955.9991"
+            index_lista_medicos=1
+        case "Mucio Homero L. R. Ribeiro":
+            cns = "704.8030.4895.4848"
+            index_lista_medicos=2
+        case "Gloriete Vieira de Oliveira":
+            cns = "707.4000.8208.5577"
+            index_lista_medicos=3
+        case "Rita Marina Soares de Castro Duarte":
+            cns = "708.4037.3810.1264"
+            index_lista_medicos=4
         case _:
             cns =""
+            index_lista_medicos=None
    
     match clinica:
         case "Clínica do Rim - Petrolina":
@@ -104,13 +171,39 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
                         "Text14b":quantidade6, "Text15b":quantidade6, "Text16b":quantidade6, "Text22a":quantidade6, "Text23a":quantidade6, "Text24a":quantidade6}
     )
 
-   
+    lme_pdf_filename = f"{paciente}.pdf"
     # write "output" to PyPDF2-output.pdf
-    with open(f"{paciente}.pdf", "wb") as output_stream:
+    with open(lme_pdf_filename, "wb") as output_stream:
         writer.write(output_stream)
+    
+    # Só faça o carimbo se o índice do médico for válido (não for None)
+    if index_lista_medicos is not None:
+        nome_medico, especialidade, crm = parametros_carimbo(lista_medicos[index_lista_medicos])
+        packet = carimbar(nome_medico, especialidade, crm)
+
+        # Ler o PDF existente e o carimbo gerado
+        original_pdf = PdfReader(lme_pdf_filename)
+        overlay_pdf = PdfReader(packet)
+        writer = PdfWriter()
+
+        # Mesclar o carimbo com o PDF original
+        for page_num in range(len(original_pdf.pages)):
+            original_page = original_pdf.pages[page_num]
+            if page_num == 0:  # Adiciona o carimbo apenas na primeira página
+                overlay_page = overlay_pdf.pages[0]
+                original_page.merge_page(overlay_page)
+            writer.add_page(original_page)
+
+        # Salvar o PDF final com o carimbo incluído
+        final_pdf_filename = f"{paciente}_lme_carimbo.pdf"
+        with open(final_pdf_filename, "wb") as output_stream:
+            writer.write(output_stream)
+    else:
+        # Se não houver carimbo, continue com o arquivo original
+        final_pdf_filename = lme_pdf_filename
 
     # Fazendo o embeded PDF para visualizar o pdf no próprio site
-    with open(f"{paciente}.pdf","rb") as f:
+    with open(final_pdf_filename,"rb") as f:
         base64_pdf = base64.b64encode(f.read()).decode('utf-8')
         
     #pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf"></iframe>'
@@ -192,6 +285,10 @@ def fazerReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidade2,
         nome_medico = "Dra Gloriete Vieira"
         especialidade = "Nefrologista"
         crm = "CRM 9766-PE"
+    elif medico ==lista_medicos[4]:
+        nome_medico = "Dra Rita Duarte"
+        especialidade = "Reumatologista"
+        crm = "CRM 16629-PE 33562-BA"
      
 
      #Criando a lógica de preenchimento a partir do dicionario

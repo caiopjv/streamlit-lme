@@ -16,7 +16,8 @@ lista_medicamentos = ["","Alfaepoetina 4.000 UI injetável",
 lista_medicos = ["Caio Petrola", 
                  "Maria Emilia Diniz", 
                  "Mucio Homero L. R. Ribeiro",
-                 "Gloriete Vieira de Oliveira"]
+                 "Gloriete Vieira de Oliveira",
+                 "Rita Marina Soares de Castro Duarte"]
 lista_cids = ["N18.0 - Doença renal crônica", 
               "M32.1 - Nefrite lúpica", 
               "N04.1 - GESF", 
