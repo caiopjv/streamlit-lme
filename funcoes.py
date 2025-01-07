@@ -196,6 +196,16 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
     pdf_display = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="800" height="1200" type="application/pdf"></embed>'
 
     st.markdown(pdf_display, unsafe_allow_html=True)
+    # -------------------------------------------------------------
+    # ADDED: botão de download para o PDF da LME
+    # -------------------------------------------------------------
+    st.download_button(
+        label="Download LME (PDF)",
+        data=base64.b64decode(base64_pdf),   # Convertemos de volta para bytes
+        file_name=final_pdf_filename,        # Nome do arquivo de download
+        mime="application/pdf"
+    )
+
 
 def fazerReceita(c, paciente, medico, remedio1, quantidade1, remedio2, quantidade2, remedio3, quantidade3, remedio4, quantidade4, remedio5, quantidade5, remedio6, quantidade6):
     lista_remedios = [remedio1, remedio2, remedio3, remedio4, remedio5, remedio6]
@@ -470,3 +480,12 @@ def gerarPdfReceita(paciente, medico, remedio1, quantidade1, remedio2, quantidad
     pdf_display_receituario = f'<embed src="data:application/pdf;base64,{base64_pdf}" width="1200" height="800" type="application/pdf"></embed>'
 
     st.markdown(pdf_display_receituario, unsafe_allow_html=True)
+    # -------------------------------------------------------------
+    # ADDED: botão de download para o PDF da Receita
+    # -------------------------------------------------------------
+    st.download_button(
+        label="Download Receita (PDF)",
+        data=base64.b64decode(base64_pdf),      # Volta para bytes
+        file_name="receituario_template.pdf",   # Nome para o download
+        mime="application/pdf"
+    )
