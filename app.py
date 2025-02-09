@@ -50,6 +50,8 @@ def main():
             quantidades.append(quantidade)
 
         submit_button = st.form_submit_button("Fazer LME")
+        
+
 
     if submit_button:
         fazerLme(paciente, mae, peso, altura,
