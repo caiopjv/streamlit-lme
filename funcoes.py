@@ -91,7 +91,7 @@ def fazerLme(paciente, mae, peso, altura, remedio1, quantidade1, remedio2, quant
 
     match doenca:
         case "Doença renal crônica":
-            anamnese = "Paciente com doença renal crônica em hemodiálise"
+            anamnese = "Paciente com doença renal crônica avançada em tratamento conservador"
         case _:
             anamnese = f"Paciente com {doenca} em tratamento de manutenção"
 
@@ -352,13 +352,13 @@ def fazerReceita(c, paciente, medico, remedio1, quantidade1, remedio2, quantidad
         linha2 = ""  # zerando o texto da receita
         if item == lista_medicamentos[1]:
             linha1 = f'Alfaepoetina     4.000 UI ______________________________{hemax_total} ampolas'
-            linha2 = f'Fazer 01 FA SC {hemax_xsema} x por semana após hemodiálise.'
+            linha2 = f'Fazer 01 FA SC {hemax_xsema} x por semana.'
         elif item == lista_medicamentos[2]:
             linha1 = f'Sacarato de hidróxido de ferro 100 mg___________________ {norip_total} ampolas'
             linha2 = f'Fazer {norip_x15dias} ampola(s) a cada 15 dias.'
         elif item == lista_medicamentos[3]:
             linha1 = f'Calcitriol 0,25 mcg _____________________________________{calcitriol_total} caps.'
-            linha2 = f'Tomar {calcitriol_dose} cápsula(s) após hemodiálise.'
+            linha2 = f'Tomar {calcitriol_dose} cápsula(s).'
         elif item == lista_medicamentos[4]:
             linha1 = f'fCalcijex 1 mcg   ____________________________________{calcijex_total}  ampolas'
             linha2 = f'Aplicar {calcijex_dose}  amp IV após hemodiálise.'
